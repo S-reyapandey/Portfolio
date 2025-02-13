@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Send, Mail, User, MessageSquare } from "lucide-react";
+import emailjs from "@emailjs/browser";
 
 const Contact = () => {
   const formInitialDetails = {
@@ -38,30 +39,30 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setButtonText("Sending...");
+  
     try {
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
+      const result = await emailjs.send(
+        process.env.REACT_APP_EMAILJS_SERVICE_ID,    
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID,    
+        {
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        },
+        process.env.REACT_APP_EMAILJS_PUBLIC_KEY    
+      );
+  
       setButtonText("Send");
       setFormData(formInitialDetails);
-      if (data.success) {
-        setStatus({ success: true, message: "Message sent successfully." });
+  
+      if (result.status === 200) {
+        setStatus({ success: true, message: "Message sent successfully!" });
       } else {
-        setStatus({
-          success: false,
-          message: data.status || "Failed to send message.",
-        });
+        setStatus({ success: false, message: "Failed to send message." });
       }
-    } catch (err) {
+    } catch (error) {
       setButtonText("Send");
-      setStatus({
-        success: false,
-        message: "Error sending message.",
-      });
+      setStatus({ success: false, message: "Error sending message." });
     }
   };
 
